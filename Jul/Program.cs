@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Jul19
 {
@@ -16,7 +17,7 @@ namespace Jul19
 
            
 
-            var luke = 12;
+            var luke = 13;
 
             if (luke == 9)
             {
@@ -37,6 +38,12 @@ namespace Jul19
             else if (luke == 12)
             {
                 var luken = new Luke12();
+                var resultat = await luken.OpenAsync();
+                Console.WriteLine(resultat);
+            }
+            else if (luke == 13)
+            {
+                var luken = new Luke13();
                 var resultat = await luken.OpenAsync();
                 Console.WriteLine(resultat);
             }
@@ -123,6 +130,78 @@ namespace Jul19
     {
         Task<int> OpenAsync();
     }
+
+    //
+    class Room
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public bool Top { get; set; }
+        public bool Left { get; set; }
+        public bool Bottom { get; set; }
+        public bool Right { get; set; }
+    }
+
+    class Luke13 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            LoadRooms();
+
+            return Task.FromResult(0);
+        }
+
+        private IEnumerable<Room> LoadRooms()
+        {
+            var retVal = new List<Room>();
+
+            char[] sep = { ' ', ':', ',' };
+
+            string line = "";
+            var r = new StreamReader(@"C:\Users\arha\source\repos\Jul\data\MAZE.TXT");
+            Room room = null;
+            while ((line = r.ReadLine()) != null)
+            {
+                line = line.Trim();
+                if (line.StartsWith("\"x\""))
+                {
+                    room = new Room();
+                    retVal.Add(room);
+                    var data = line.Split(sep);
+                    room.X = int.Parse(data[2]);
+                }
+                else if (line.StartsWith("\"y\""))
+                {
+                    var data = line.Split(sep);
+                    room.Y = int.Parse(data[2]);
+                }
+                else if (line.StartsWith("\"top\""))
+                {
+                    var data = line.Split(sep);
+                    room.Top = bool.Parse(data[2]);
+                }
+                else if (line.StartsWith("\"left\""))
+                {
+                    var data = line.Split(sep);
+                    room.Left = bool.Parse(data[2]);
+                }
+                else if (line.StartsWith("\"right\""))
+                {
+                    var data = line.Split(sep);
+                    room.Right = bool.Parse(data[2]);
+                }
+                else if (line.StartsWith("\"bottom\""))
+                {
+                    var data = line.Split(sep);
+                    room.Bottom = bool.Parse(data[2]);
+                }
+            }
+
+            return retVal;
+        }
+
+    }
+    //
 
     class Luke12 : KnowItJuleKalenderLuke
     {
