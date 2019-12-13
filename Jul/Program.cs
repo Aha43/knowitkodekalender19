@@ -131,7 +131,132 @@ namespace Jul19
         Task<int> OpenAsync();
     }
 
+    class Luke13 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            var maze = new Maze();
+
+            var arthurBoot = new ArthurBoot(maze);
+            var res = arthurBoot.Search();
+            Console.WriteLine("Arthur: " + res.Item1 + ", " + res.Item2);
+
+            var isaacBoot = new IsaacBoot(maze);
+            res = isaacBoot.Search();
+            Console.WriteLine("Isaac: " + res.Item1 + ", " + res.Item2);
+
+            return Task.FromResult(0);
+        }
+
+
+
+    }
+
     //
+
+    abstract class BaseRobot
+    {
+        protected Maze Maze;
+
+        protected Room Current { get; set; } = null;
+
+        private HashSet<Room> Visited = new HashSet<Room>();
+
+        private Stack<Room> Trail = new Stack<Room>();
+
+        public BaseRobot(Maze maze)
+        {
+            Maze = maze;
+        }
+
+        public (bool, int) Search()
+        {
+            Visited.Clear();
+            Trail.Clear();
+
+            Current = Maze.Entry;
+            while (!Current.Goal)
+            {
+                if (!Visited.Contains(Current))
+                {
+                    Visited.Add(Current);
+                    Console.WriteLine(Current);
+                }
+                
+                Room next = null;
+                for (int i = 0; i < 4 && next == null; i++)
+                {
+                    var room = Next(i);
+                    if (room != null)
+                    {
+                        if (!Visited.Contains(room))
+                        {
+                            next = room;
+                        }
+                    }
+                }
+
+                if (next == null)
+                {
+                    if (!Trail.Any())
+                    {
+                        return (false, Visited.Count());
+                    }
+                    else
+                    {
+                        Current = Trail.Pop();
+                    }
+                }
+                else
+                {
+                    Trail.Push(Current);
+                    Current = next;
+                }
+            }
+            Visited.Add(Current);
+
+            return (true, Visited.Count);
+        }
+
+        public abstract Room Next(int i);
+    }
+
+    class ArthurBoot : BaseRobot
+    {
+        public ArthurBoot(Maze maze) : base(maze) {}
+
+        public override Room Next(int i)
+        {
+            switch (i)
+            {
+                case 0: return Maze.TryGoDown(Current);
+                case 1: return Maze.TryGoRight(Current);
+                case 2: return Maze.TryGoLeft(Current);
+                case 3: return Maze.TryGoUp(Current);
+                default: throw new Exception();
+            }
+        }
+
+    }
+
+    class IsaacBoot : BaseRobot
+    {
+        public IsaacBoot(Maze maze) : base(maze) {}
+
+        public override Room Next(int i)
+        {
+            switch (i)
+            {
+                case 0: return Maze.TryGoRight(Current);
+                case 1: return Maze.TryGoDown(Current);
+                case 2: return Maze.TryGoLeft(Current);
+                case 3: return Maze.TryGoUp(Current);
+                default: throw new Exception();
+            }
+        }
+
+    }
+
     class Room
     {
         public int X { get; set; }
@@ -140,16 +265,73 @@ namespace Jul19
         public bool Left { get; set; }
         public bool Bottom { get; set; }
         public bool Right { get; set; }
+        
+        public override bool Equals(object obj)
+        {
+            if (obj == this) return true;
+            var o = obj as Room;
+            return o == null ? false : o.X == X && o.Y == Y;
+        }
+        
+        public override int GetHashCode()
+        {
+            int retVal = 7;
+            retVal = 31 * retVal + X;
+            retVal = 31 * retVal + X;
+            return retVal;
+        }
+
+        public override string ToString()
+        {
+            return "[" + X.ToString() + ',' + Y.ToString() + "]";
+        }
+
+        public bool Goal => X == 499 && Y == 499;
+
     }
 
-    class Luke13 : KnowItJuleKalenderLuke
+    class Maze
     {
-        public Task<int> OpenAsync()
-        {
-            LoadRooms();
+        private Room[,] _maze = new Room[500, 500];
 
-            return Task.FromResult(0);
+        public Maze()
+        {
+            foreach (var r in LoadRooms()) _maze[r.X, r.Y] = r;
         }
+
+        public Room TryGoUp(Room from)
+        {
+            var x = from.X;
+            var y = from.Y;
+            var room = _maze[x, y];
+            return room.Top ? null : _maze[x, y - 1];
+        }
+
+        public Room TryGoRight(Room from)
+        {
+            var x = from.X;
+            var y = from.Y;
+            var room = _maze[x, y];
+            return room.Right ? null : _maze[x + 1, y];
+        }
+
+        public Room TryGoDown(Room from)
+        {
+            var x = from.X;
+            var y = from.Y;
+            var room = _maze[x, y];
+            return room.Bottom ? null : _maze[x, y + 1];
+        }
+
+        public Room TryGoLeft(Room from)
+        {
+            var x = from.X;
+            var y = from.Y;
+            var room = _maze[x, y];
+            return room.Left ? null : _maze[x - 1, y];
+        }
+
+        public Room Entry => _maze[0, 0];
 
         private IEnumerable<Room> LoadRooms()
         {
@@ -199,8 +381,9 @@ namespace Jul19
 
             return retVal;
         }
-
     }
+
+    
     //
 
     class Luke12 : KnowItJuleKalenderLuke
