@@ -138,14 +138,14 @@ namespace Jul19
             var maze = new Maze();
 
             var arthurBoot = new ArthurBoot(maze);
-            var res = arthurBoot.Search();
-            Console.WriteLine("Arthur: " + res.Item1 + ", " + res.Item2);
+            var resArthur = arthurBoot.Search();
+            //Console.WriteLine("Arthur: " + res.Item1 + ", " + res.Item2);
 
             var isaacBoot = new IsaacBoot(maze);
-            res = isaacBoot.Search();
-            Console.WriteLine("Isaac: " + res.Item1 + ", " + res.Item2);
+            var resIsaac = isaacBoot.Search();
+            //Console.WriteLine("Isaac: " + res.Item1 + ", " + res.Item2);
 
-            return Task.FromResult(0);
+            return Task.FromResult(Math.Abs(resArthur - resIsaac));
         }
 
 
@@ -169,7 +169,7 @@ namespace Jul19
             Maze = maze;
         }
 
-        public (bool, int) Search()
+        public int Search()
         {
             Visited.Clear();
             Trail.Clear();
@@ -180,7 +180,7 @@ namespace Jul19
                 if (!Visited.Contains(Current))
                 {
                     Visited.Add(Current);
-                    Console.WriteLine(Current);
+                    //Console.WriteLine(Current);
                 }
                 
                 Room next = null;
@@ -200,7 +200,7 @@ namespace Jul19
                 {
                     if (!Trail.Any())
                     {
-                        return (false, Visited.Count());
+                        return -1;
                     }
                     else
                     {
@@ -215,7 +215,7 @@ namespace Jul19
             }
             Visited.Add(Current);
 
-            return (true, Visited.Count);
+            return Visited.Count;
         }
 
         public abstract Room Next(int i);
@@ -340,7 +340,7 @@ namespace Jul19
             char[] sep = { ' ', ':', ',' };
 
             string line = "";
-            var r = new StreamReader(@"C:\Users\arha\source\repos\Jul\data\MAZE.TXT");
+            var r = new StreamReader(@"D:\dev\rep\challenges\knowitkodekalender19\data\MAZE.TXT");
             Room room = null;
             while ((line = r.ReadLine()) != null)
             {
