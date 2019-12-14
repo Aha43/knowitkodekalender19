@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.Text;
 
 namespace Jul19
 {
@@ -17,7 +18,7 @@ namespace Jul19
 
            
 
-            var luke = 13;
+            var luke = 14;
 
             if (luke == 9)
             {
@@ -44,6 +45,12 @@ namespace Jul19
             else if (luke == 13)
             {
                 var luken = new Luke13();
+                var resultat = await luken.OpenAsync();
+                Console.WriteLine(resultat);
+            }
+            else if (luke == 14)
+            {
+                var luken = new Luke14();
                 var resultat = await luken.OpenAsync();
                 Console.WriteLine(resultat);
             }
@@ -131,6 +138,121 @@ namespace Jul19
         Task<int> OpenAsync();
     }
 
+    //
+
+    class Luke14 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            var alfabet = new SekvensAlfabet(2, 3);
+            var sekvens = new Sekvens(alfabet);
+            sekvens.Iterate(7);
+            Console.WriteLine(sekvens);
+
+            return Task.FromResult(0);
+        }
+    }
+
+    class SekvensTall
+    {
+        public int Tall { get; private set; }
+
+        public int Iterasjon { get; set; } = -1;
+
+        public int Produsert { get; private set; } = 0;
+
+        public SekvensTall(int tall) { Tall = tall; }
+
+        public void LeggTilProduserte(int nye) { Produsert += nye; }
+
+        public override string ToString()
+        {
+            return Tall.ToString() + " : " + Produsert.ToString();
+        }
+    }
+
+    class SekvensAlfabet
+    {
+        private readonly SekvensTall[] _alfabet;
+
+        public SekvensAlfabet(params int[] alafabet)
+        {
+            int n = alafabet.Length;
+            _alfabet = new SekvensTall[n];
+            for (int i = 0; i < n; i++) _alfabet[i] = new SekvensTall(alafabet[i]);
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach (var st in _alfabet) sb.AppendLine(st.ToString());
+            return sb.ToString();
+        }
+
+        public int Count() { return _alfabet.Length; }
+
+        public SekvensTall Get(int iterasjon)
+        {
+            return _alfabet[(iterasjon - 1) % _alfabet.Length];
+        }
+
+        public SekvensTall GittIterasjon(int i)
+        {
+            return _alfabet.Where(e => e.Iterasjon == i).FirstOrDefault();
+        }
+    }
+
+    class Sekvens
+    {
+        private readonly SekvensAlfabet _alfabet;
+
+        public int Iterasjon { get; private set; } = 1;
+
+        public SekvensTall IterasjonsTall { get; private set; }
+
+        public int Lengde { get; private set; } = 0;
+
+        public Sekvens(SekvensAlfabet alfabet) { _alfabet = alfabet; }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append("Iterasjon: ").AppendLine(Iterasjon.ToString()).AppendLine("Result: ").AppendLine(_alfabet.ToString());
+            return sb.ToString();
+        }
+
+        public void Iterate(int n)
+        {
+            for (var i = 1; i <= n; i++) Turn();
+        }
+
+        private void Turn()
+        {
+            var t = _alfabet.Get(Iterasjon);
+            if (Iterasjon == 1)
+            {
+                t.LeggTilProduserte(t.Tall);
+                Lengde = t.Tall;
+
+                Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + t.Tall + " ganger, sekvens lengde: " + Lengde);
+            }
+            else
+            {
+                var n = _alfabet.GittIterasjon(Iterasjon).Tall;
+                t.LeggTilProduserte(n);
+                Lengde += n;
+
+                Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + n + " ganger, sekvens lengde: " + Lengde);
+            }
+
+            Iterasjon++;
+            t.Iterasjon = Iterasjon;
+        }
+
+    }
+
+    //
+
     class Luke13 : KnowItJuleKalenderLuke
     {
         public Task<int> OpenAsync()
@@ -139,20 +261,14 @@ namespace Jul19
 
             var arthurBoot = new ArthurBoot(maze);
             var resArthur = arthurBoot.Search();
-            //Console.WriteLine("Arthur: " + res.Item1 + ", " + res.Item2);
 
             var isaacBoot = new IsaacBoot(maze);
             var resIsaac = isaacBoot.Search();
-            //Console.WriteLine("Isaac: " + res.Item1 + ", " + res.Item2);
 
             return Task.FromResult(Math.Abs(resArthur - resIsaac));
         }
 
-
-
     }
-
-    //
 
     abstract class BaseRobot
     {
@@ -164,10 +280,7 @@ namespace Jul19
 
         private Stack<Room> Trail = new Stack<Room>();
 
-        public BaseRobot(Maze maze)
-        {
-            Maze = maze;
-        }
+        public BaseRobot(Maze maze) { Maze = maze; }
 
         public int Search()
         {
@@ -177,35 +290,19 @@ namespace Jul19
             Current = Maze.Entry;
             while (!Current.Goal)
             {
-                if (!Visited.Contains(Current))
-                {
-                    Visited.Add(Current);
-                    //Console.WriteLine(Current);
-                }
+                Visited.Add(Current);
                 
                 Room next = null;
                 for (int i = 0; i < 4 && next == null; i++)
                 {
                     var room = Next(i);
-                    if (room != null)
-                    {
-                        if (!Visited.Contains(room))
-                        {
-                            next = room;
-                        }
-                    }
+                    if (room != null && !Visited.Contains(room)) next = room;
                 }
 
                 if (next == null)
                 {
-                    if (!Trail.Any())
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        Current = Trail.Pop();
-                    }
+                    if (!Trail.Any()) return -1;    
+                    Current = Trail.Pop();
                 }
                 else
                 {
@@ -287,7 +384,6 @@ namespace Jul19
         }
 
         public bool Goal => X == 499 && Y == 499;
-
     }
 
     class Maze
@@ -383,8 +479,6 @@ namespace Jul19
         }
     }
 
-    
-    //
 
     class Luke12 : KnowItJuleKalenderLuke
     {
