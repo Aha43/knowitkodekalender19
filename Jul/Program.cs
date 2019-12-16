@@ -18,7 +18,7 @@ namespace Jul19
 
            
 
-            var luke = 14;
+            var luke = 16;
 
             if (luke == 9)
             {
@@ -51,6 +51,12 @@ namespace Jul19
             else if (luke == 14)
             {
                 var luken = new Luke14();
+                var resultat = await luken.OpenAsync();
+                Console.WriteLine(resultat);
+            }
+            else if (luke == 16)
+            {
+                var luken = new Luke16();
                 var resultat = await luken.OpenAsync();
                 Console.WriteLine(resultat);
             }
@@ -136,6 +142,84 @@ namespace Jul19
     interface KnowItJuleKalenderLuke
     {
         Task<int> OpenAsync();
+    }
+
+    class Luke16 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            var parser = new FjordParser();
+            var fjord = parser.Parse();
+            return Task.FromResult(0);
+        }
+    }
+
+    //
+
+    class FjordSlice
+    {
+        public int NordligBredde { get; set; }
+        public int SørligBredde { get; set; }
+        public bool Vann { get; set; } = false;
+    }
+
+    class Fjord
+    {
+        public int Bredde { get; set; } = 0;
+        public int Lengde => (Slices == null) ? 0 : Slices.Length;
+        public FjordSlice[] Slices { get; set; }
+        public Birte Birte { get; set; }
+    }
+
+    class Birte
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Vendinger { get; set; }
+    }
+
+    class FjordParser
+    {
+        public Fjord Parse()
+        {
+           
+            var r = new StreamReader(@"C:\Users\arha\source\repos\Jul\data\FjordenBaby.txt");
+
+            Fjord fjord = new Fjord();
+            
+            var line = r.ReadLine();
+            int n = line.Length;
+            fjord.Slices = new FjordSlice[n];
+            for (var i = 0; i < n; i++) fjord.Slices[i] = new FjordSlice();
+            while (line != null)
+            {
+                fjord.Bredde++;
+                for (int i = 0; i < n; i++)
+                {
+                    var slice = fjord.Slices[i];
+                    var c = line[i];
+                    switch (c)
+                    {
+                        case ' ': 
+                            slice.Vann = true; 
+                        break;
+                        case 'B':
+                            fjord.Birte = new Birte { X = i, Y = fjord.Bredde };
+                        break;
+                        case '#':
+                            if (slice.Vann) 
+                                slice.SørligBredde++;
+                            else
+                                slice.NordligBredde++;
+                        break;
+                        default: throw new Exception("unexpected: " + c);
+                    }
+                }
+                line = r.ReadLine();
+            }
+
+            return fjord;
+        }
     }
 
     //
