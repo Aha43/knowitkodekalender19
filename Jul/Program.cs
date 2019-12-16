@@ -150,7 +150,9 @@ namespace Jul19
         {
             var parser = new FjordParser();
             var fjord = parser.Parse();
-            return Task.FromResult(0);
+            var birte = fjord.Birte;
+            birte.SeilHjem(fjord);
+            return Task.FromResult(birte.Vendinger);
         }
     }
 
@@ -171,11 +173,35 @@ namespace Jul19
         public Birte Birte { get; set; }
     }
 
+    enum Retning { Stille, Sydover, Nordover };
+
     class Birte
     {
         public int X { get; set; }
         public int Y { get; set; }
         public int Vendinger { get; set; }
+        public Retning Retning { get; set; } = Retning.Stille;
+
+        public void SeilHjem(Fjord fjord)
+        {
+            foreach (var s in fjord.Slices) Move(s);
+        }
+
+        public void Move(FjordSlice slice)
+        {
+            switch (Retning)
+            {
+                case Retning.Stille:
+                    break;
+                case Retning.Sydover:
+                    break;
+                case Retning.Nordover:
+                    break;
+            }
+        }
+
+
+
     }
 
     class FjordParser
