@@ -144,9 +144,9 @@ namespace Jul19
     {
         public Task<int> OpenAsync()
         {
-            var alfabet = new SekvensAlfabet(2, 3);
+            var alfabet = new SekvensAlfabet(2, 3, 5, 7, 11);
             var sekvens = new Sekvens(alfabet);
-            sekvens.Iterate(7);
+            sekvens.Iterate(217532235);
             Console.WriteLine(sekvens);
 
             return Task.FromResult(0);
@@ -157,7 +157,7 @@ namespace Jul19
     {
         public int Tall { get; private set; }
 
-        public int Iterasjon { get; set; } = -1;
+        //public int Iterasjon { get; set; } = -1;
 
         public int Produsert { get; private set; } = 0;
 
@@ -196,19 +196,35 @@ namespace Jul19
             return _alfabet[(iterasjon - 1) % _alfabet.Length];
         }
 
-        public SekvensTall GittIterasjon(int i)
-        {
-            return _alfabet.Where(e => e.Iterasjon == i).FirstOrDefault();
-        }
+    }
+
+    class Track
+    {
+        public int N { get; set; }
+        public SekvensTall Tall { get; set; }
     }
 
     class Sekvens
     {
         private readonly SekvensAlfabet _alfabet;
 
-        public int Iterasjon { get; private set; } = 1;
+        private readonly List<Track> _indeksTrack = new List<Track>();
+        
+        private int GetTallVedSistIndex()
+        {
+            var track = _indeksTrack[0];
+            var retVal = track.Tall.Tall;
+            if (track.N == 1) _indeksTrack.RemoveAt(0);
+            else track.N--;
+            return retVal;
+        }
 
-        public SekvensTall IterasjonsTall { get; private set; }
+        private void AddToIndeksTrack(SekvensTall tall, int N)
+        {
+            _indeksTrack.Add(new Track { N = N, Tall = tall });
+        }
+
+        public int Iterasjon { get; private set; } = 1;
 
         public int Lengde { get; private set; } = 0;
 
@@ -221,9 +237,10 @@ namespace Jul19
             return sb.ToString();
         }
 
-        public void Iterate(int n)
+        public void Iterate(int max)
         {
-            for (var i = 1; i <= n; i++) Turn();
+            while (Lengde < max) Turn();
+            //for (var i = 1; i <= n; i++) Turn();
         }
 
         private void Turn()
@@ -233,20 +250,26 @@ namespace Jul19
             {
                 t.LeggTilProduserte(t.Tall);
                 Lengde = t.Tall;
+                AddToIndeksTrack(t, t.Tall - 1);
 
-                Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + t.Tall + " ganger, sekvens lengde: " + Lengde);
+                Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + t.Tall + " ganger, sekvens lengde: " + Lengde + ", q: " + _indeksTrack.Count());
             }
             else
             {
-                var n = _alfabet.GittIterasjon(Iterasjon).Tall;
+                //var n = _alfabet.GittIterasjon(Iterasjon).Tall;
+                var n = GetTallVedSistIndex();
+                AddToIndeksTrack(t, n);
+                
                 t.LeggTilProduserte(n);
                 Lengde += n;
 
-                Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + n + " ganger, sekvens lengde: " + Lengde);
+                if (Iterasjon % 100000 == 0)
+                    Console.WriteLine("Iterasjon: " + Iterasjon + ": Legger til " + t.Tall + " " + n + " ganger, sekvens lengde: " + Lengde + ", q: " + _indeksTrack.Count());
             }
 
             Iterasjon++;
-            t.Iterasjon = Iterasjon;
+
+            //Console.WriteLine("q: " + _indeksTrack.Count());
         }
 
     }
