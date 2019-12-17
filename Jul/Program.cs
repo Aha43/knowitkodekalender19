@@ -152,11 +152,9 @@ namespace Jul19
             var fjord = parser.Parse();
             var birte = fjord.Birte;
             birte.SeilHjem(fjord);
-            return Task.FromResult(birte.Vendinger);
+            return Task.FromResult(birte.Vendinger + 1);
         }
     }
-
-    //
 
     class FjordSlice
     {
@@ -173,34 +171,60 @@ namespace Jul19
         public Birte Birte { get; set; }
     }
 
-    enum Retning { Stille, Sydover, Nordover };
+    enum Retning { Sydover, Nordover };
 
     class Birte
     {
-        public int X { get; set; }
         public int Y { get; set; }
         public int Vendinger { get; set; }
-        public Retning Retning { get; set; } = Retning.Stille;
+        public Retning Retning { get; set; } = Retning.Nordover;
 
         public void SeilHjem(Fjord fjord)
         {
-            foreach (var s in fjord.Slices) Move(s);
-        }
-
-        public void Move(FjordSlice slice)
-        {
-            switch (Retning)
+            for (int i = 1; i < fjord.Slices.Length; i++)
             {
-                case Retning.Stille:
-                    break;
-                case Retning.Sydover:
-                    break;
-                case Retning.Nordover:
-                    break;
+                Move(fjord, fjord.Slices[i], i);
             }
         }
 
-
+        public void Move(Fjord fjord, FjordSlice slice, int i)
+        {
+            switch (Retning)
+            {
+                case Retning.Sydover:
+                    {
+                        int y = Y - 1;
+                        int rom = y - slice.SørligBredde;
+                        if (rom >= 2)
+                        {
+                            Y = y;
+                        }
+                        else
+                        {
+                            y = Y + 1;
+                            Vendinger++;
+                            Retning = Retning.Nordover;
+                        }
+                    }
+                break;
+                case Retning.Nordover:
+                    {
+                        int y = Y + 1;
+                        int rom = fjord.Bredde - slice.NordligBredde - y - 1;
+                        if (rom >= 2)
+                        {
+                            Y = y;
+                        }
+                        else
+                        {
+                            y = Y - 1;
+                            Vendinger++;
+                            Retning = Retning.Sydover;
+                        }
+                    }
+                 break;
+            }
+        }
 
     }
 
@@ -209,7 +233,7 @@ namespace Jul19
         public Fjord Parse()
         {
            
-            var r = new StreamReader(@"C:\Users\arha\source\repos\Jul\data\FjordenBaby.txt");
+            var r = new StreamReader(@"D:\dev\rep\challenges\knowitkodekalender19\data\FjordenBaby.txt");
 
             Fjord fjord = new Fjord();
             
@@ -230,7 +254,7 @@ namespace Jul19
                             slice.Vann = true; 
                         break;
                         case 'B':
-                            fjord.Birte = new Birte { X = i, Y = fjord.Bredde };
+                            fjord.Birte = new Birte { Y = fjord.Bredde };
                         break;
                         case '#':
                             if (slice.Vann) 
@@ -244,6 +268,7 @@ namespace Jul19
                 line = r.ReadLine();
             }
 
+            fjord.Birte.Y = fjord.Bredde - fjord.Birte.Y;
             return fjord;
         }
     }
