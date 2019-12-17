@@ -18,7 +18,7 @@ namespace Jul19
 
            
 
-            var luke = 16;
+            var luke = 17;
 
             if (luke == 9)
             {
@@ -57,6 +57,12 @@ namespace Jul19
             else if (luke == 16)
             {
                 var luken = new Luke16();
+                var resultat = await luken.OpenAsync();
+                Console.WriteLine(resultat);
+            }
+            else if (luke == 17)
+            {
+                var luken = new Luke17();
                 var resultat = await luken.OpenAsync();
                 Console.WriteLine(resultat);
             }
@@ -143,6 +149,125 @@ namespace Jul19
     {
         Task<int> OpenAsync();
     }
+
+    class Luke17 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            int n = 0;
+            for (long i = 0; i <= 1000000; i++)
+            {
+                var triangularNumber = i.TriangularNumber();
+                var rotations = triangularNumber.Rotations();
+                if (rotations.Any(e => e.Square())) n++;
+            }
+
+            return Task.FromResult(n);
+        }
+    }
+
+    static class IntExtensions
+    {
+        public static long Length(this long n)
+        {
+            if (n == 0) return 1;
+            return (long)Math.Floor(Math.Log10(Math.Abs(n)) + 1);
+        }
+
+        public static bool Square(this long n)
+        {
+            var sr = Math.Sqrt(n);
+            return ((sr - Math.Floor(sr)) == 0);
+        }
+
+        public static long[] Digits(this long n)
+        {
+            n = Math.Abs(n);
+            var l = n.Length();
+            var retVal = new long[l];
+            int i = 0;
+            foreach (var c in n.ToString())
+            {
+                switch (c)
+                {
+                    case '0': retVal[i++] = 0; break;
+                    case '1': retVal[i++] = 1; break;
+                    case '2': retVal[i++] = 2; break;
+                    case '3': retVal[i++] = 3; break;
+                    case '4': retVal[i++] = 4; break;
+                    case '5': retVal[i++] = 5; break;
+                    case '6': retVal[i++] = 6; break;
+                    case '7': retVal[i++] = 7; break;
+                    case '8': retVal[i++] = 8; break;
+                    case '9': retVal[i++] = 9; break;
+                    default: throw new Exception();
+                }
+            }
+            return retVal;
+        }
+
+        public static long ToLong(this long[] digits)
+        {
+            long n = 0;
+            int l = digits.Length;
+            int p = l - 1;
+            for (int i = 0; i < l; i++, p--) n += digits[i] * (long)Math.Pow(10, p);
+            return n;
+        }
+
+        public static long[] Shift(this long[] a)
+        {
+            int n = a.Length;
+            if (n > 0)
+            {
+                long tmp = a[n - 1];
+                for (int i = n - 1; i > 0; i--) a[i] = a[i - 1];
+                a[0] = tmp;
+            }
+            return a;
+        }
+
+        public static long[] Rotations(this long n)
+        {
+            var digits = n.Digits();
+            var retVal = new long[digits.Length];
+            retVal[0] = n;
+            for (int i = 1; i < digits.Length; i++)
+            {
+                digits = digits.Shift();
+                retVal[i] = digits.ToLong();
+            }
+
+            return retVal;
+        }
+
+        public static long TriangularNumber(this long n)
+        {
+            if (n < 0)
+            {
+                throw new ArgumentException("n < 0 : " + n + " < 0");
+            }
+
+            return n * (n + 1) / 2;
+        }
+
+        public static string Print(this long[] a)
+        {
+            var sb = new StringBuilder();
+            sb.Append("[");
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(a[i]);
+            }
+            sb.Append("]");
+            return sb.ToString();
+        }
+
+    }
+
+
+    //
 
     class Luke16 : KnowItJuleKalenderLuke
     {
