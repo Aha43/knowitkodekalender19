@@ -18,7 +18,7 @@ namespace Jul19
 
            
 
-            var luke = 17;
+            var luke = 18;
 
             if (luke == 9)
             {
@@ -63,6 +63,12 @@ namespace Jul19
             else if (luke == 17)
             {
                 var luken = new Luke17();
+                var resultat = await luken.OpenAsync();
+                Console.WriteLine(resultat);
+            }
+            else if (luke == 18)
+            {
+                var luken = new Luke18();
                 var resultat = await luken.OpenAsync();
                 Console.WriteLine(resultat);
             }
@@ -149,6 +155,82 @@ namespace Jul19
     {
         Task<int> OpenAsync();
     }
+
+    class Luke18 : KnowItJuleKalenderLuke
+    {
+        public Task<int> OpenAsync()
+        {
+            var parser = new Luke18Parser();
+            var data = parser.Parse();
+
+            return Task.FromResult(0);
+        }
+    }
+
+    //
+
+    class Person
+    {
+        public string Fornavn { get; set; }
+        public string Etternavn { get; set; }
+        public bool Mann { get; set; }
+    }
+
+    class Data
+    {
+        public Person[] Persons { get; set; }
+        public List<string[]> Lists { get; } = new List<string[]>();
+        
+    }
+
+    class Luke18Parser
+    {
+        public Data Parse()
+        {
+            var retVal = new Data();
+
+            List<string> list = new List<string>();
+
+            using var r1 = new StreamReader(@"C:\Users\arha\Downloads\lukenames.txt", Encoding.ASCII);
+            var line = r1.ReadLine();
+            while (line != null)
+            {
+                if (line.Equals("---"))
+                {
+                    retVal.Lists.Add(list.ToArray());
+                    list.Clear();
+                }
+                else
+                {
+                    list.Add(line);
+                }
+
+                line = r1.ReadLine();
+            }
+
+            retVal.Lists.Add(list.ToArray());
+
+            var persons = new List<Person>();
+            using var r2 = new StreamReader(@"C:\Users\arha\Downloads\employees.csv", Encoding.ASCII);
+            var sep = new char[] { ',' };
+            line = r2.ReadLine();
+            line = r2.ReadLine();
+            while (line != null)
+            {
+                var tokens = line.Split(',');
+                persons.Add(new Person { Fornavn = tokens[0], Etternavn = tokens[1], Mann = tokens[2][0] == 'M' });
+
+                line = r2.ReadLine();
+            }
+            retVal.Persons = persons.ToArray();
+
+
+            return retVal;
+        }
+    }
+
+
+    //
 
     class Luke17 : KnowItJuleKalenderLuke
     {
